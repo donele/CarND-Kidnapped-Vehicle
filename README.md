@@ -11,7 +11,8 @@ The next step is called resampling. A new set of particles is selected with the 
 
 ## Initialization
 The location is initialized with the GPS measurement. Random particles are generated around the measured location.
-The number of particles is decided to 320 from following result.
+The number of particles is decided to 320 by investigating the system time and errors as function of the number of particles.
+Following plot shows that the system time does not increase significantly until the number of particle is 320, while the errors are within 3% of the values with 1280 particles.
 
 ![alt_text][imageNumParticle]
 
