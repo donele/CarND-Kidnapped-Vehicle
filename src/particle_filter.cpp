@@ -24,7 +24,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   norm_dist = normal_distribution<double>(0., 1.);
   uni_dist = uniform_real_distribution<double>(0., 1.);
 
-  num_particles = 10;
+  num_particles = 320;
 
   for(int i = 0; i < num_particles; ++i) {
     Particle p;
@@ -46,13 +46,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
       p.y += velocity / yaw_rate * (-cos(p.theta + delta_t * yaw_rate) + cos(p.theta)) + norm_dist(gen) * std_pos[1];
     }
     else {
-      p.x += norm_dist(gen) * std_pos[0];
-      p.y += norm_dist(gen) * std_pos[1];
+      p.x += delta_t * velocity * cos(p.theta) + norm_dist(gen) * std_pos[0];
+      p.y += delta_t * velocity * sin(p.theta) + norm_dist(gen) * std_pos[1];
     }
-
-    // std_pos[2] is the GPS uncertainty of the yaw angle, too samll for adding noise to particles.
-    // Therefore multiflied by 10.
-    p.theta += yaw_rate * delta_t + norm_dist(gen) * std_pos[2] * 10;
+    p.theta += yaw_rate * delta_t + norm_dist(gen) * std_pos[2];
   }
 }
 
