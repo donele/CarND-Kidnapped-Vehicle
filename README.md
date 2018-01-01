@@ -7,6 +7,27 @@ Each particles' location is updated with the control data.
 Then the likelihood of each particles is calculated from the observation and the map data.
 The next step is called resampling. A new set of particles is selected with the probability proportional to the likelihood calculated in the previous step.
 
+[imageNumParticle]: num_particle.png "Num Particle"
+
+## Initialization
+The location is initialized with the GPS measurement. Random particles are generated around the measured location.
+The number of particles is decided to 320 from following result.
+
+![alt_text][imageNumParticle]
+
+Two random distributions are created as members to the class ParticleFilter. A normal distribution is used for adding noise to the location variables. A uniform distribution is used in the resampling step.
+
+```c++
+  norm_dist = normal_distribution<double>(0., 1.);
+  uni_dist = uniform_real_distribution<double>(0., 1.);
+```
+
+## Prediction
+Each particles' location and oritentation are updated according the the control data. If yaw rate is smaller than 1e-6, a constant yaw rate is assumed.
+
+## Weights update and Resampling
+For each particle, a weight is calculated from the differences between observations and predicted landmark measurements.
+
 ## Running the Code
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
 
