@@ -48,6 +48,16 @@ struct LandmarkObs {
 	double y;			// Local (vehicle coordinates) y position of landmark observation [m]
 };
 
+inline double getProb(LandmarkObs& lm1, LandmarkObs& lm2, double sigma[]) {
+  double prob = 1.;
+  if(sigma[0] > 1e-6 && sigma[1] > 1e-6) {
+    double gauss_norm = 1. / (2 * M_PI * sigma[0] * sigma[1]);
+    double exponent = (lm1.x - lm2.x)*(lm1.x - lm2.x)/2./sigma[0]/sigma[0] + (lm1.y - lm2.y)*(lm1.y - lm2.y)/2./sigma[1]/sigma[1];
+    prob = gauss_norm * exp(-exponent);
+  }
+  return prob;
+}
+
 /*
  * Computes the Euclidean distance between two 2D points.
  * @param (x1,y1) x and y coordinates of first point

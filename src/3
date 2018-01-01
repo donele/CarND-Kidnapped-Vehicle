@@ -27,7 +27,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   debug = 0;
   norm_dist = normal_distribution<double>(0., 1.);
   uni_dist = uniform_real_distribution<double>(0., 1.);
-  num_particles = 5;
+  num_particles = 1000;
   if(debug == 2)
     printf("init:\n");
   for(int i = 0; i < num_particles; ++i) {
@@ -36,6 +36,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     p.x = norm_dist(gen) * std[0] + x;
     p.y = norm_dist(gen) * std[1] + y;
     p.theta = norm_dist(gen) * std[2] + theta;
+    //while(p.theta > M_PI) p.theta -= 2 * M_PI;
+    //while(p.theta < -M_PI) p.theta += 2 * M_PI;
     p.weight = 1.;
     particles.push_back(p);
     if(debug == 2)
@@ -56,13 +58,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     printf("prediction: dt %.4e v %.4e yr %.4e\n", delta_t, velocity, yaw_rate);
   for(int i = 0; i < num_particles; ++i) {
     Particle& p = particles[i];
-    if(fabs(yaw_rate) > 1e-6) {
-      p.x += velocity / yaw_rate * (sin(p.theta + delta_t * yaw_rate) - sin(p.theta)) + norm_dist(gen) * std_pos[0];
-      p.y += velocity / yaw_rate * (-cos(p.theta + delta_t * yaw_rate) + cos(p.theta)) + norm_dist(gen) * std_pos[1];
-    }
+    p.x += velocity / yaw_rate * (sin(p.theta + delta_t * yaw_rate) - sin(p.theta)) + norm_dist(gen) * std_pos[0];
+    p.y += velocity / yaw_rate * (-cos(p.theta + delta_t * yaw_rate) + cos(p.theta)) + norm_dist(gen) * std_pos[1];
     p.theta += yaw_rate * delta_t + norm_dist(gen) * std_pos[2] * 10;
-    //while(p.theta > 2 * M_PI) p.theta -= 2 * M_PI;
-    //while(p.theta < 0.) p.theta += 2 * M_PI;
+    //while(p.theta > M_PI) p.theta -= 2 * M_PI;
+    //while(p.theta < -M_PI) p.theta += 2 * M_PI;
     if(debug == 2)
       printf("%.4f %.4f %.4f\n", p.x, p.y, p.theta);
   }
@@ -92,6 +92,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
   for(auto& particle : particles) {
+    //particle.weight = 0.;
     double prob = 1.;
     vector<int> associations;
     vector<double> sense_x;
@@ -100,9 +101,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for(int iObs = 0; iObs < nObs; ++iObs) {
       auto& obs = observations[iObs];
 
-      double len_obs = dist(0., 0., obs.x, obs.y);
-      if(len_obs > sensor_range)
-        continue;
+      //double len_obs = dist(0., 0., obs.x, obs.y);
+      //if(len_obs > sensor_range)
+      //  continue;
 
       if(debug == 2)
         printf("#-- %7s: %.2f %.2f\n", "obs", obs.x, obs.y);
@@ -132,12 +133,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       double obs_prob = getProb(obs_trans, closest, std_landmark);
       if(debug == 2)
         printf("   min_dist: %.4f obs_prob: %.8e\n", min_dist, obs_prob);
-      if(false && isnan(obs_prob)) {
-        cerr << "ERROR obs_prob" << '\t' << obs_prob << endl;
-        printf("    %7s: %.2f %.2f\n", "trans", obs_trans.x, obs_trans.y);
-        printf("    %7s: %.2f %.2f dist: %.2f\n", "closest", closest.x, closest.y, min_dist);
-        printf("   min_dist: %.4f obs_prob: %.8e\n", min_dist, obs_prob);
-      }
       prob *= obs_prob;
     }
 
@@ -147,9 +142,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       particle.weight = prob;
       SetAssociations(particle, associations, sense_x, sense_y);
     }
-    else {
+    else
       cerr << "ERROR " << prob << endl;
-    }
   }
   if(debug == 1) {
     int i;
@@ -160,13 +154,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 LandmarkObs ParticleFilter::getTransformed(const LandmarkObs& obs, const Particle& p) {
   LandmarkObs obsRet;
-  double th = p.theta;
-  while(th > 2 * M_PI) th -= 2 * M_PI;
-  while(th < 0.) th += 2 * M_PI;
-  obsRet.x = obs.x * cos(th) - obs.y * sin(th) + p.x;
-  obsRet.y = obs.x * sin(th) + obs.y * cos(th) + p.y;
-  if(isnan(obsRet.x) || isnan(obsRet.y))
-    cerr << "ERROR nan\t" << obs.x << '\t' << obs.y << '\t' << p.x << '\t' << p.y << '\t' << th << endl;
+  obsRet.x = obs.x * cos(p.theta) - obs.y * sin(p.theta) + p.x;
+  obsRet.y = obs.x * sin(p.theta) + obs.y * cos(p.theta) + p.y;
   return obsRet;
 }
 

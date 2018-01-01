@@ -10,6 +10,7 @@
 #define PARTICLE_FILTER_H_
 
 #include "helper_functions.h"
+#include <random>
 
 struct Particle {
 
@@ -26,6 +27,7 @@ struct Particle {
 
 
 class ParticleFilter {
+        int debug;
 	
 	// Number of particles to draw
 	int num_particles; 
@@ -38,14 +40,19 @@ class ParticleFilter {
 	// Vector of weights of all particles
 	std::vector<double> weights;
 	
+        std::default_random_engine gen;
+        std::normal_distribution<double> norm_dist;
+        std::uniform_real_distribution<double> uni_dist;
 public:
 	
+        LandmarkObs getTransformed(const LandmarkObs& obs, const Particle& p);
+
 	// Set of current particles
 	std::vector<Particle> particles;
 
 	// Constructor
 	// @param num_particles Number of particles
-	ParticleFilter() : num_particles(0), is_initialized(false) {}
+	ParticleFilter() : debug(0), num_particles(0), is_initialized(false) {}
 
 	// Destructor
 	~ParticleFilter() {}
@@ -101,7 +108,7 @@ public:
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
 	 */
-	Particle SetAssociations(Particle& particle, const std::vector<int>& associations,
+	void SetAssociations(Particle& particle, const std::vector<int>& associations,
 		                     const std::vector<double>& sense_x, const std::vector<double>& sense_y);
 
 	
