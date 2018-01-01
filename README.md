@@ -1,5 +1,6 @@
 # Kidnapped Vehicle Project
 A 2-dimensional particle filter is implemented in C++ to track the trajectory of a simulated car.
+
 The location is initialized with the GPS measurement, and then a number of states are randomly generated, and they are called particles.
 At each timestep, an observation and control data are given to the filter.
 Each particles' location is updated with the control data.
